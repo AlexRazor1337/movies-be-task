@@ -6,7 +6,7 @@ const validator = (schema) => (req, res, next) => {
   Object.keys(request).forEach((key) => (Object.keys(request[key]).length === 0) && delete request[key]);
 
   const { error } = schema.validate(request);
-  if (error) new Error(error.details[0].message)
+  if (error) throw new Error(error.details[0].message)
 
   next();
 }
