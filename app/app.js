@@ -1,11 +1,12 @@
 const express = require('express');
 
 const routes = require('./routes');
+const { errorHandler } = require('./middleware');
 
 const app = express();
 app.use(express.json());
 
 app.use(routes);
-app.get('/', (req, res) => res.send('Hello World!'));
+app.use(errorHandler);
 
 module.exports = app;
