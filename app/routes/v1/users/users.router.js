@@ -10,9 +10,9 @@ const usersRouter = express.Router();
 
 usersRouter.post('/', validator(validation.createUser), (req, res, next) =>
     usersController
-        .createUser(req)
+        .createUser(req.body)
         .then((result) => res.status(StatusCodes.CREATED).send(result))
         .catch(next)
-  );
+);
 
 module.exports = usersRouter;
