@@ -1,9 +1,14 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
+const { DataTypes, Model } = require('sequelize');
 const sequelize = require('../db');
 
 class Movie extends Model {}
 
 Movie.init({
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
     title: {
         type: DataTypes.STRING,
         allowNull: false,

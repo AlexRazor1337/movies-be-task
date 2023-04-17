@@ -1,6 +1,7 @@
-const User = require('@/models/user')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken');
+
+const User = require('@/models/user')
 
 const createSession = async ({ email, password }) => {
     const user = await User.findOne({
@@ -20,8 +21,8 @@ const createSession = async ({ email, password }) => {
                     email: 'AUTHENTICATION_FAILED',
                     password: 'AUTHENTICATION_FAILED',
                 },
+                code: 'AUTHENTICATION_FAILED',
             },
-            code: 'AUTHENTICATION_FAILED',
         };
     }
 

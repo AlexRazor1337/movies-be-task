@@ -1,5 +1,6 @@
-const User = require('@/models/user')
 const bcrypt = require('bcryptjs')
+const User = require('@/models/user')
+
 const { createSession } = require('../sessions/sessions.controller')
 
 const createUser = async ({ name, email, password }) => {
@@ -19,8 +20,8 @@ const createUser = async ({ name, email, password }) => {
                     fields: {
                         email: 'NOT_UNIQUE'
                     },
+                    code: 'EMAIL_NOT_UNIQUE',
                 },
-                code: 'EMAIL_NOT_UNIQUE',
             };
         }
     }
