@@ -30,9 +30,22 @@ const getMovie = Joi.object({
     }),
 });
 
+const getMovies = Joi.object({
+    query: Joi.object({
+        title: Joi.string(),
+        actor: Joi.string(),
+        search: Joi.string(),
+        sort: Joi.string().valid('id', 'title', 'year'),
+        order: Joi.string().valid('ASC', 'DESC'),
+        limit: Joi.number().integer(),
+        offset: Joi.number().integer(),
+    }),
+});
+
 module.exports = {
     createMovie,
     deleteMovie,
     updateMovie,
     getMovie,
+    getMovies,
 };

@@ -192,9 +192,66 @@ const getMovie = async ({ id }) => {
 }
 
 
+const getMovies = async ({ title, actor, search, sort = 'id', order = 'ASC', limit = 20, offset = 0 }) => {
+    const where = {};
+
+    if (title) {
+        where.title = {
+            [Op.like]: `%${title}%`,
+        }
+    }
+
+    if (actor) {
+        where['$actors.name$'] = {
+            [Op.like]: `%${actor}%`,
+        }
+    }
+
+    if (search) {
+        where[Op.or] = [
+            {
+                title: {
+                    [Op.like]: `%${search}%`,
+                }
+            },
+            {
+                '$actors.name$': {
+                    [Op.like]: `%${search}%`,
+                }
+            },
+        ]
+    }
+
+    const { count: total, rows: data } = await Movie.findAndCountAll({
+        where,
+        include: {
+            model: Actor,
+            as: 'actors',
+            through: { attributes: [] },
+            attributes: [],
+        },
+        order: [
+            [[sort, order]],
+        ],
+        limit,
+        offset,
+        subQuery: false,
+        distinct: true,
+    });
+
+    return {
+        status: 1,
+        data,
+        meta: {
+            total,
+        }
+    }
+}
+
 module.exports = {
     createMovie,
     deleteMovie,
     updateMovie,
     getMovie,
+    getMovies
 };

@@ -33,4 +33,10 @@ moviesRouter.get('/:id', validator(validation.getMovie), (req, res, next) => {
         .catch(next)
 });
 
+moviesRouter.get('/', validator(validation.getMovies), (req, res, next) => {
+    moviesController.getMovies(req.query)
+        .then((result) => res.status(StatusCodes.OK).send(result))
+        .catch(next)
+});
+
 module.exports = moviesRouter;
