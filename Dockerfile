@@ -6,4 +6,7 @@ RUN npm ci --only=production
 COPY . .
 EXPOSE 8050
 USER node
+ENV JWT_SECRET=secret
+ENV DB_PATH="./db.sqlite"
+ENV APP_PORT=8050
 CMD [ "npm", "start" ]
