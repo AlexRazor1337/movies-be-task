@@ -103,14 +103,6 @@ const updateMovie = async ({ id, title, year, format, actors }) => {
         },
     });
 
-    const prevActors = await movie.getActors();
-
-    movie.update({
-        title,
-        year,
-        format,
-    });
-
     if (!movie) {
         return {
             status: 0,
@@ -119,6 +111,28 @@ const updateMovie = async ({ id, title, year, format, actors }) => {
                     id,
                 },
                 code: 'MOVIE_NOT_FOUND',
+            }
+        }
+    }
+    
+    const prevActors = await movie.getActors();
+
+    try {
+        await movie.update({
+            title,
+            year,
+            format,
+        });
+    } catch (error) {
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return {
+                status: 0,
+                error: {
+                    fields: {
+                        title: 'NOT_UNIQUE'
+                    },
+                    code: 'MOVIE_EXISTS'
+                }
             }
         }
     }
@@ -195,8 +209,8 @@ const getMovies = async ({ title, actor, search, sort = 'id', order = 'ASC', lim
     const where = {};
 
     const searchActorLiteral = (actor) => {
-        return sequelize.literal(`id IN
-            (SELECT "movieId" FROM "actorMovies" WHERE "actorId" IN
+        return sequelize.literal(`Movie.id IN
+            (SELECT "movieId" FROM "ActorMovies" WHERE "actorId" IN
             (SELECT id FROM "actors" WHERE "name" LIKE '%${actor}%'))`)
     }
 

@@ -7,11 +7,13 @@ const createUser = async ({ name, email, password }) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        await User.create({
+        console.log('tete', name, email, hashedPassword)
+        const user = await User.create({
             name,
             email,
             password: hashedPassword,
         });
+        console.log('user', user)
     } catch (error) {
         if (error.name === 'SequelizeUniqueConstraintError') {
             return {
@@ -23,6 +25,8 @@ const createUser = async ({ name, email, password }) => {
                     code: 'EMAIL_NOT_UNIQUE',
                 },
             };
+        } else {
+            throw error;
         }
     }
 
