@@ -41,6 +41,6 @@ docker run --name movies -p 8000:8050 -e APP_PORT=8050 alexrazor/movies
 
 ### Possible ENV variables for configuration
 
-`APP_PORT` - port for the app to listen inside a container, default - `8050`
-`JWT_SECRET` - secret for JWT token generation/verification, default - `secret`
-`DB_PATH` - path to the sqlite3 database file inside a container - default - `./db.sqlite`
+`APP_PORT` - port for the app to listen inside a container, default - `8050`  
+`JWT_SECRET` - secret for JWT token generation/verification, default - `secret`  
+`DB_PATH` - path to the sqlite3 database file inside a container - default - `./db.sqlite`  
