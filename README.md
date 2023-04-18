@@ -27,6 +27,13 @@ Build Docker image:
 docker build . -t alexrazor/movies
 ```
 
+OR
+
+[Get the latest version from Docker Hub:](https://hub.docker.com/r/alexrazor/movies)
+```sh
+docker pull alexrazor/movies:latest
+```
+
 Run app using Docker:
 ```sh
 docker run --name movies -p 8000:8050 -e APP_PORT=8050 alexrazor/movies
