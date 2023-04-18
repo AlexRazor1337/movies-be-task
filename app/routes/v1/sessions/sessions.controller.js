@@ -15,7 +15,6 @@ const createSession = async ({ email, password }) => {
         },
     };
 
-    console.log('session', email, password)
     const user = await User.findOne({
         where: {
             email,
@@ -23,7 +22,7 @@ const createSession = async ({ email, password }) => {
         raw: true,
     });
     if (!user) return error;
-    console.log('session2', user)
+    
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) return error;
 
