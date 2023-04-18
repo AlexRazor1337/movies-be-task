@@ -1,3 +1,4 @@
+const multer = require('multer')
 const express = require('express');
 const { StatusCodes } = require('http-status-codes')
 
@@ -35,6 +36,12 @@ moviesRouter.get('/:id', validator(validation.getMovie), (req, res, next) => {
 
 moviesRouter.get('/', validator(validation.getMovies), (req, res, next) => {
     moviesController.getMovies(req.query)
+        .then((result) => res.status(StatusCodes.OK).send(result))
+        .catch(next)
+});
+
+moviesRouter.post('/import', multer().single('movies'), (req, res, next) => {
+    moviesController.importMovies(req.file)
         .then((result) => res.status(StatusCodes.OK).send(result))
         .catch(next)
 });

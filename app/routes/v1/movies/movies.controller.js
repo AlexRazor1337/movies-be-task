@@ -138,7 +138,7 @@ const updateMovie = async ({ id, title, year, format, actors }) => {
 
     await movie.setActors(movieActors);
 
-    // Get all actors that are not in the movie anymore
+    // Get and destroy all actors that are not in any movie anymore
     await Promise.all(prevActors.filter((actor) => !actors.includes(actor.name))
     .map((actor) => {
         return ActorMovie.count({
@@ -191,9 +191,18 @@ const getMovie = async ({ id }) => {
     }
 }
 
-
 const getMovies = async ({ title, actor, search, sort = 'id', order = 'ASC', limit = 20, offset = 0 }) => {
     const where = {};
+
+    const searchActorLiteral = (actor) => {
+        return sequelize.literal(`id IN
+            (SELECT "movieId" FROM "actorMovies" WHERE "actorId" IN
+            (SELECT id FROM "actors" WHERE "name" LIKE '%${actor}%'))`)
+    }
+
+    // Use sequelize.literal because of sequelize issues with eager loading, subQuery and where conditions
+    // See https://github.com/sequelize/sequelize/issues/9605
+    // Also https://github.com/sequelize/sequelize/issues/12971
 
     if (title) {
         where.title = {
@@ -202,9 +211,9 @@ const getMovies = async ({ title, actor, search, sort = 'id', order = 'ASC', lim
     }
 
     if (actor) {
-        where['$actors.name$'] = {
-            [Op.like]: `%${actor}%`,
-        }
+        where[Op.or] = [
+            searchActorLiteral(actor),
+        ]
     }
 
     if (search) {
@@ -214,11 +223,7 @@ const getMovies = async ({ title, actor, search, sort = 'id', order = 'ASC', lim
                     [Op.like]: `%${search}%`,
                 }
             },
-            {
-                '$actors.name$': {
-                    [Op.like]: `%${search}%`,
-                }
-            },
+            searchActorLiteral(search),
         ]
     }
 
@@ -235,7 +240,6 @@ const getMovies = async ({ title, actor, search, sort = 'id', order = 'ASC', lim
         ],
         limit,
         offset,
-        subQuery: false,
         distinct: true,
     });
 
@@ -248,10 +252,62 @@ const getMovies = async ({ title, actor, search, sort = 'id', order = 'ASC', lim
     }
 }
 
+const importMovies = async (movies) => {
+    const content = Buffer.from(movies.buffer, 'base64').toString('utf-8')
+
+    const regex = /Title: (.+).*\nRelease Year: (\d{4}).*\nFormat: (.+).*\nStars: (.+).*/gm;
+
+    const totalMovies = [...content.trim().matchAll(regex)].map((movie) => {
+        const [, title, year, format, actors] = movie;
+
+        return {
+            title,
+            year,
+            format,
+            actors: actors.split(', '),
+        };
+    });
+
+    const transaction = await sequelize.transaction(); // Because of SQLite
+
+    const allActors = [...new Set(totalMovies.reduce((acc, movie) => acc.concat(movie.actors), []))];
+    const movieActors = await Promise.all(allActors.map((actorName) => {
+        return Actor.findOrCreate({
+            where: {
+                name: actorName,
+            },
+            transaction,
+        })
+    })).then((act) => act.map((actor) => actor[0]));
+
+    await transaction.commit();
+
+    const importedMovies = await Movie
+        .bulkCreate(totalMovies, { ignoreDuplicates: true, returning: true })
+        .then((movies) => movies.filter((movie) => movie.id));
+
+    await Promise.all(importedMovies.map((movie, index) => {
+        const actors = movieActors.filter((actor) => {
+            return totalMovies.find((m) => m.title === movie.title).actors.includes(actor.name);
+        });
+        return movie.setActors(actors);
+    }));
+
+    return {
+        status: 1,
+        data: importedMovies,
+        meta: {
+            total: totalMovies.length,
+            imported: importedMovies.length
+        }
+    }
+}
+
 module.exports = {
     createMovie,
     deleteMovie,
     updateMovie,
     getMovie,
-    getMovies
+    getMovies,
+    importMovies,
 };
