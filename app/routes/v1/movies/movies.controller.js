@@ -114,7 +114,7 @@ const updateMovie = async ({ id, title, year, format, actors }) => {
             }
         }
     }
-    
+
     const prevActors = await movie.getActors();
 
     try {
