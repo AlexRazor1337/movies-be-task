@@ -257,6 +257,14 @@ const getMovies = async ({ title, actor, search, sort = 'id', order = 'ASC', lim
         distinct: true,
     });
 
+    if (sort === 'title') {
+        data.sort((a, b) => {
+            // Compare utf strings ignoring case
+            const direction = order === 'ASC' ? 1 : -1;
+            return direction * a.title.localeCompare(b.title, 'en', { sensitivity: 'base' });
+        });
+    }
+
     return {
         status: 1,
         data,
