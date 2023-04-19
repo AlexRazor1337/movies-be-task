@@ -271,16 +271,32 @@ const importMovies = async (movies) => {
 
     const regex = /Title: (.+).*\nRelease Year: (\d{4}).*\nFormat: (.+).*\nStars: (.+).*/gm;
 
-    const totalMovies = [...content.trim().matchAll(regex)].map((movie) => {
+    let totalMovies = [...content.trim().matchAll(regex)].map((movie) => {
         const [, title, year, format, actors] = movie;
 
         return {
-            title,
+            title: title.trim(),
             year,
             format,
             actors: actors.split(', '),
         };
     });
+
+    const totalCount = totalMovies.length;
+
+    totalMovies = totalMovies.filter((movie) => {
+        const { title, year, format, actors } = movie
+        const regex = /[\d~`!@#$%^&*()\_=+[\]{}\\|;:'",.<>\/?]/;
+
+        if (title.length === 0) return false;
+        if (year < 1850 || year > 2023) return false;
+        if (!['VHS', 'DVD', 'Blu-Ray'].includes(format)) return false;
+        if (actors.some((actor) => actor.match(regex))) return false;
+
+        return true;
+    })
+
+    console.log(totalMovies)
 
     const transaction = await sequelize.transaction(); // Because of SQLite
 
@@ -297,13 +313,18 @@ const importMovies = async (movies) => {
     await transaction.commit();
 
     const importedMovies = await Movie
-        .bulkCreate(totalMovies, { ignoreDuplicates: true, returning: true })
-        .then((movies) => movies.filter((movie) => movie.id));
+        .bulkCreate(totalMovies, { ignoreDuplicates: true })
+        .then((movies) => Movie.findAll({ // To simulate 'returning' option
+            where: {
+                title: { [Op.in]: movies.map((movie) => movie.title) }
+            }
+        }));
 
-    await Promise.all(importedMovies.map((movie, index) => {
+    await Promise.all(importedMovies.map((movie) => {
         const actors = movieActors.filter((actor) => {
             return totalMovies.find((m) => m.title === movie.title).actors.includes(actor.name);
         });
+        console.log(movie.id, movie)
         return movie.setActors(actors);
     }));
 
@@ -311,7 +332,7 @@ const importMovies = async (movies) => {
         status: 1,
         data: importedMovies,
         meta: {
-            total: totalMovies.length,
+            total: totalCount,
             imported: importedMovies.length
         }
     }

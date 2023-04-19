@@ -1,10 +1,13 @@
 const Joi = require('joi');
 
 const fullMovieBody = Joi.object({
-    title: Joi.string().required(),
-    year: Joi.number().integer().required(),
+    title: Joi.string().trim().min(1).required(),
+    year: Joi.number().integer().min(1850).max(2023).required(),
     format: Joi.string().valid('DVD', 'VHS', 'Blu-Ray').required(),
-    actors: Joi.array().items(Joi.string()).required(),
+    actors: Joi.array().items(Joi.string().pattern(/[\d~`!@#$%^&*()\_=+[\]{}\\|;:'",.<>\/?]/, { invert: true })).required()
+    .messages(
+        { '*': 'Actors must be an array of strings, containing only letters, spaces and "-" symbol' }
+    )
 });
 
 const createMovie = Joi.object({
